@@ -36,8 +36,10 @@
  *********************************************************************/
 
 #include <my_configure/explore.h>
-
+#include "std_msgs/Bool.h"
 #include <thread>
+#include <ros/ros.h>
+using namespace std;
 
 //#include <move_base_msgs/MoveBaseGoal>
 
@@ -149,11 +151,11 @@ void Explore::visualizeFrontiers(
     m.scale.z = 0.1;
     m.points = frontier.points;
     m.color = blue;
-    /*if (goalOnBlacklist(frontier.centroid)) {
+    if (goalOnBlacklist(frontier.centroid)) {
       m.color = red;
     } else {
       m.color = blue;
-    }*/
+    }
     markers.push_back(m);
     ++id;
     m.type = visualization_msgs::Marker::SPHERE;
@@ -184,6 +186,7 @@ void Explore::visualizeFrontiers(
 
 void Explore::makePlan()
 {
+
   // find frontiers
   auto pose = costmap_client_.getRobotPose();
   // get frontiers sorted according to cost
@@ -226,17 +229,17 @@ void Explore::makePlan()
     prev_distance_ = frontier->min_distance;
   }
   // black list if we've made no progress for a long time
-  /*if (ros::Time::now() - last_progress_ > progress_timeout_) {
+  if (ros::Time::now() - last_progress_ > progress_timeout_) {
     frontier_blacklist_.push_back(target_position);
     ROS_DEBUG("Adding current goal to black list");
     makePlan();
     return;
-  }*/
+  }
 
   // we don't need to do anything if we still pursuing the same goal
-/*  if (same_goal) {
+  if (same_goal) {
     return;
-  }*/
+  }
 
   // send goal to move_base if we have something new to pursue
   move_base_msgs::MoveBaseGoal goal;
@@ -244,6 +247,8 @@ void Explore::makePlan()
   goal.target_pose.pose.orientation.w = 1.;
   goal.target_pose.header.frame_id = costmap_client_.getGlobalFrameID();
   goal.target_pose.header.stamp = ros::Time::now();
+
+
   move_base_client_.sendGoal(
       goal, [this, target_position](
                 const actionlib::SimpleClientGoalState& status,
@@ -302,16 +307,71 @@ void Explore::stop()
 
 }  // namespace explore
 
+class Listener {
+
+public:
+    bool est;
+
+    void power_Callback(std_msgs::Bool cmd_exploration);
+};
+
+
+
+void Listener::power_Callback(std_msgs::Bool cmd_exploration) {
+
+  est = cmd_exploration.data;
+  //cout<<"estat = "<<est<<endl;
+  /*if (est == false) {
+  cout<<"estat = "<<est<<endl;
+}*/
+
+    //Doing nothing
+}
+
+
+
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "explore");
+  ros::NodeHandle nh;
+  ros::Rate loop_rate(1);
+  Listener listener;
+  ros::Subscriber sub = nh.subscribe ("cmd_exploration", 1, &Listener::power_Callback, &listener);
+
+  //cout<<listener.est<<endl;
+
+  while (ros::ok())
+     {
+         ros::spinOnce();
+         //cout<<listener.est<<endl;
+
+        if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME,
+                                              ros::console::levels::Debug)) {
+             ros::console::notifyLoggerLevelsChanged();
+           }
+        if (listener.est == true) {
+           explore::Explore explore;
+          // break;
+           while(listener.est == true) {
+           ros::spinOnce();
+         }
+
+         } else {
+
+        cout<<"Explorer node state is: "<<listener.est<<endl;
+      }
 
 
-  if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME,
+
+         loop_rate.sleep();
+     }
+
+  /*if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME,
                                      ros::console::levels::Debug)) {
     ros::console::notifyLoggerLevelsChanged();
   }
-  explore::Explore explore;
+
+  explore::Explore explore;*/
 
   ros::spin();
 

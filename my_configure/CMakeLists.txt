@@ -142,6 +142,9 @@ add_executable(explore
   src/explore.cpp
   src/frontier_search.cpp
 )
+add_executable(bool_publisher src/bool_publisher.cpp)
+
+
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -149,6 +152,9 @@ add_executable(explore
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(dynamic_reconfigure_node ${PROJECT_NAME}_gencfg)
 add_dependencies(explore ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+add_dependencies(bool_publisher ${bool_publisher_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
@@ -171,6 +177,7 @@ target_link_libraries(dynamic_reconfigure_node ${catkin_LIBRARIES})
 #   ${catkin_LIBRARIES}
 # )
 target_link_libraries(explore ${catkin_LIBRARIES})
+target_link_libraries(bool_publisher ${catkin_LIBRARIES})
 
 #############
 ## Install ##
