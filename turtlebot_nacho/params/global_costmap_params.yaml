@@ -14,3 +14,4 @@ global_costmap:
     #Can disable sensor layer if gmapping is fast enough to update scans
     - {name: obstacles_laser,     type: "costmap_2d::ObstacleLayer"}
     - {name: inflation,           type: "costmap_2d::InflationLayer"}
+    - {name: social,              type: "social_navigation_layers::ProxemicLayer"}
